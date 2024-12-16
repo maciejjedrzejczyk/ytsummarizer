@@ -1,11 +1,11 @@
-name: yt-summarizer-beta-beta
+name: yt-summarizer
 
 services:
-  yt-summarizer-beta:
-    container_name: yt-summarizer-beta-beta
-    hostname: yt-summarizer-beta
+  yt-summarizer:
+    container_name: yt-summarizer
+    hostname: yt-summarizer
     networks:
-      - yt-summarizer-beta
+      - yt-summarizer
     build: .
     ports:
       - "17430:8080"
@@ -15,11 +15,6 @@ services:
     volumes:
       - ./transcripts:/app/transcripts
 
-# volumes:
-#   yt-summarizer-beta:
-#     name: yt-summarizer-beta
-#     external: true
-
 networks:
-  yt-summarizer-beta:
-    name: yt-summarizer-beta
+  yt-summarizer:
+    name: yt-summarizer
