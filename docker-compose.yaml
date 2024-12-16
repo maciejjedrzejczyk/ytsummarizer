@@ -1,0 +1,25 @@
+name: yt-summarizer-beta-beta
+
+services:
+  yt-summarizer-beta:
+    container_name: yt-summarizer-beta-beta
+    hostname: yt-summarizer-beta
+    networks:
+      - yt-summarizer-beta
+    build: .
+    ports:
+      - "17430:8080"
+    environment:
+      - PORT=8080
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434/api
+    volumes:
+      - ./transcripts:/app/transcripts
+
+# volumes:
+#   yt-summarizer-beta:
+#     name: yt-summarizer-beta
+#     external: true
+
+networks:
+  yt-summarizer-beta:
+    name: yt-summarizer-beta

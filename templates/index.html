@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Summarizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        #videoForm {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        input[type="text"], input[type="submit"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        input[type="submit"] {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+        #progressBar {
+            width: 100%;
+            background-color: #ddd;
+            display: none;
+            margin-top: 20px;
+        }
+        #progressBar div {
+            width: 0%;
+            height: 30px;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            transition: width 0.5s;
+        }
+        #result, #error {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #result {
+            background-color: #e8f5e9;
+        }
+        #error {
+            background-color: #ffebee;
+            color: #c62828;
+            display: none;
+        }
+        #transcriptLink {
+            display: block;
+            margin-top: 10px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        #transcriptLink:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Video Summarizer</h1>
+    <form id="videoForm">
+        <input type="text" id="videoUrl" placeholder="Paste YouTube URL here" required>
+        <select id="modelSelect">
+            <option value="">Select a model</option>
+        </select>
+        <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="pl">Polish</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <!-- Add more languages as needed -->
+        </select>
+        <label for="basePrompt">Base Prompt (you can edit this):</label>
+        <textarea id="basePrompt" rows="10" cols="50"></textarea>
+        <input type="submit" value="Summarize">
+    </form>
+    <div id="progressBar"><div>0%</div></div>
+    <div id="error"></div>
+    <div id="result"></div>
+    <script>
+        const modelSelect = document.getElementById('modelSelect');
+        const errorDiv = document.getElementById('error');
+        async function loadModels() {
+            try {
+                const response = await fetch('/models');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch models');
+                }
+                const data = await response.json();
+                modelSelect.innerHTML = '<option value="">Select a model</option>';
+                if (data.models && data.models.length > 0) {
+                    data.models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.name;
+                        option.textContent = model.name;
+                        if (model.name === data.default_model) {
+                            option.selected = true;
+                        }
+                        modelSelect.appendChild(option);
+                    });
+                } else {
+                    throw new Error('No models available');
+                }
+            } catch (error) {
+                console.error('Error fetching models:', error);
+                errorDiv.textContent = `Error loading models: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+        async function loadBasePrompt() {
+            try {
+                const response = await fetch('/base_prompt');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch base prompt');
+                }
+                const data = await response.json();
+                document.getElementById('basePrompt').value = data.base_prompt;
+            } catch (error) {
+                console.error('Error fetching base prompt:', error);
+                errorDiv.textContent = `Error loading base prompt: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+        document.getElementById('videoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const videoUrl = document.getElementById('videoUrl').value;
+            const model = modelSelect.value;
+            const customBasePrompt = document.getElementById('basePrompt').value;
+            const language = document.getElementById('languageSelect').value;
+            const resultDiv = document.getElementById('result');
+            const progressBar = document.getElementById('progressBar');
+            const progressBarInner = progressBar.querySelector('div');
+            
+            if (!model) {
+                errorDiv.textContent = 'Please select a model';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            resultDiv.innerHTML = '';
+            errorDiv.style.display = 'none';
+            progressBar.style.display = 'block';
+            progressBarInner.style.width = '0%';
+            progressBarInner.textContent = 'Initiating...';
+            try {
+                const response = await fetch('/summarize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        video_url: videoUrl, 
+                        model: model,
+                        custom_base_prompt: customBasePrompt,
+                        subtitle_lang: language
+                    }),
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    let newlineIndex;
+                    while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+                        const line = buffer.slice(0, newlineIndex);
+                        buffer = buffer.slice(newlineIndex + 1);
+                        
+                        try {
+                            const data = JSON.parse(line);
+                            if (data.progress !== undefined) {
+                                progressBarInner.style.width = `${data.progress}%`;
+                                progressBarInner.textContent = data.message || `${data.progress}%`;
+                            } else if (data.summary) {
+                                resultDiv.innerHTML = `
+                                    <h2>Summary:</h2>
+                                    ${data.summary}
+                                    <a href="${data.transcript_link}" id="transcriptLink" download>Download Transcript</a>
+                                `;
+                            }
+                        } catch (error) {
+                            console.error('Error parsing JSON:', error);
+                        }
+                    }
+                }
+                progressBar.style.display = 'none';
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+                progressBar.style.display = 'none';
+            }
+        });
+        // Load models and base prompt when the page loads
+        loadModels();
+        loadBasePrompt();
+    </script>
+</body>
+</html>
