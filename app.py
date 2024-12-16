@@ -13,13 +13,14 @@ import sys
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 app = Flask(__name__, static_folder='/app/static')
-CORS(app, resources={r"/*": {"origins": "https://ytsummarizer.mxjlab.duckdns.org"}})
+CORS(app, resources={r"/*": {"origins": "<your domain name through which the app is exposed>"}})
 logger = logging.getLogger(__name__)
 OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', 'http://host.docker.internal:11434/api')
 TRANSCRIPTS_DIR = "/app/transcripts"
 os.makedirs(TRANSCRIPTS_DIR, exist_ok=True)
 DEFAULT_MODEL = "llama3.2:latest"
 BASE_PROMPT = """You are a helpful assistant. Your only task is to summarize this transcript fragment for me. Be concise and formal. Start with an executive summary (150 words maximum), followed by a presentation of key information found in the transcript. Extract key information, such as events, activities, places, names or other key data (financial, social, scientific or otherwise) that can help me understand what that fragment is about. Present the data points in bulletpoint format and refer to the specific speaker as well as the occurrence time when it was mentioned and who said it. Complete this task based on the fragment (from {start_time} to {end_time})."""
+# BASE_PROMPT = """Jesteś pomocnym asystentem. Twoim jedynym zadaniem jest podsumowanie tego fragmentu transkryptu. Rozpocznij od krótkiego opisu (maks. 150 słów), po którym przedstawione zostaną najważniejsze dane, dotyczące osób, tematów, miejsc, działań, aktywności lub innych danych (finansowych, społecznych itd), które pomogą mi lepiej zrozumieć, co jest przedmiotem tego fragmentu. Przedstaw wszystkie dane w postaci listy i do każdego punktu przypisz moment w transkrypcie, kiedy dany temat był omawiany. Wykonaj to zadanie w oparciu o fragment z {start_time} do {end_time}."""
 
 @app.route('/health')
 def health_check():
