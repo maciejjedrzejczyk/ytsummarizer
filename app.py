@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory, send_file, Respo
 from flask_cors import CORS
 import json
 import yt_dlp
+import browser_cookie3
 import requests
 import os
 import markdown
@@ -37,6 +38,7 @@ def download_subtitles(video_url, lang='en'):
         'subtitleslangs': [lang],
         'skip_download': True,
         'outtmpl': os.path.join(TRANSCRIPTS_DIR, '%(id)s.%(ext)s'),
+        'cookiefile': '/data/cookies/cookies.txt',  # Path to your cookie file
     }
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
