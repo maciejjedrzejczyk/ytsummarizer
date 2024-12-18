@@ -10,6 +10,7 @@ YouTube Video Summarizer is a web application that automatically generates conci
 - Customizable AI models for summarization based on one's own hosted Ollama library
 - Progress tracking during the summarization process
 - Downloadable transcripts
+- Support for cookies [ (see this document for more details)](./cookie_extract.md)
 
 ## How It Works
 
@@ -26,6 +27,7 @@ To set up a development environment, you'll need:
 - Python 3.9 or higher
 - Docker and Docker Compose
 - Ollama (running locally or on a accessible server)
+
 
 ## Dependencies
 
