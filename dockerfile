@@ -7,6 +7,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+COPY ./cookies/cookies.txt /app/cookies.txt
 
 EXPOSE 8080
 
