@@ -14,7 +14,7 @@ services:
       - OLLAMA_BASE_URL=http://host.docker.internal:11434/api
     volumes:
       - ./transcripts:/app/transcripts
-
+      - ./cookies/cookies.txt:/data/cookies/cookies.txt
 networks:
   yt-summarizer:
     name: yt-summarizer
