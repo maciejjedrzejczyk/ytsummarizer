@@ -1,4 +1,4 @@
-# YouTube Video Summarizer
+# YouTube Video Summarize Tool
 
 ## Overview
 
